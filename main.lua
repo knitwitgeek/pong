@@ -51,8 +51,8 @@ VIRTUAL_HEIGHT = 243
 PADDLE_SPEED = 200
 
 -- AI Difficulty Adjustments
-AI_EASY = 3
-AI_NORMAL = 1
+AI_EASY = 11
+AI_NORMAL = 5
 AI_HARD = 0
 
 --[[
@@ -243,12 +243,16 @@ function love.update(dt)
     -- player 1 - AI
     -- Check for y position of ball with some leeway while ball is on same side of court
     -- Harder AI is more precise
-    if ball.y + ball.height + aiDifficulty < player1.y and ball.x < VIRTUAL_WIDTH / 2 then
-        player1.dy = -PADDLE_SPEED
-    elseif ball.y > player1.y + player1.height + aiDifficulty and ball.x < VIRTUAL_WIDTH / 2 then
-        player1.dy = PADDLE_SPEED
-    else
-        player1.dy = 0
+    if gameState == 'play' then
+        if ball.y + ball.height + aiDifficulty < player1.y + player1.height/2
+            and ball.x < VIRTUAL_WIDTH / 2 then
+            player1.dy = -PADDLE_SPEED
+        elseif ball.y > player1.y + player1.height/2 + aiDifficulty
+            and ball.x < VIRTUAL_WIDTH / 2 then
+            player1.dy = PADDLE_SPEED
+        else
+            player1.dy = 0
+        end
     end
 
     -- player 2
@@ -302,23 +306,10 @@ function love.keypressed(key)
         elseif gameState == 'serve' then
             gameState = 'play'
         elseif gameState == 'done' then
-            -- game is simply in a restart phase here, but will set the serving
-            -- player to the opponent of whomever won for fairness!
-            gameState = 'start'
-
-            ball:reset()
-
-            -- reset scores to 0
-            player1Score = 0
-            player2Score = 0
-
-            -- decide serving player as the opposite of who won
-            if winningPlayer == 1 then
-                servingPlayer = 2
-            else
-                servingPlayer = 1
-            end
+            resetGame()
         end
+    elseif key == 'r' then
+        resetGame()
     end
 end
 
@@ -337,15 +328,15 @@ function love.draw()
         -- UI messages
         love.graphics.setFont(smallFont)
         love.graphics.printf('Welcome to Pong!', 0, 10, VIRTUAL_WIDTH, 'center')
-        love.graphics.printf('Press Enter to begin!', 0, 20, VIRTUAL_WIDTH, 'center')
-        love.graphics.printf('Select Opponent difficulty: (E)asy, (N)ormal, (H)ard', 0, 30, VIRTUAL_WIDTH, 'center')
+        love.graphics.printf('Select Opponent difficulty: (E)asy, (N)ormal, (H)ard', 0, 20, VIRTUAL_WIDTH, 'center')
         if aiDifficulty == AI_EASY then
-            love.graphics.printf('Current Difficulty: Easy', 0, 40, VIRTUAL_WIDTH, 'center')
+            love.graphics.printf('Current Difficulty: Easy', 0, 30, VIRTUAL_WIDTH, 'center')
         elseif aiDifficulty == AI_NORMAL then
-            love.graphics.printf('Current Difficulty: Normal', 0, 40, VIRTUAL_WIDTH, 'center')
+            love.graphics.printf('Current Difficulty: Normal', 0, 30, VIRTUAL_WIDTH, 'center')
         elseif aiDifficulty == AI_HARD then
-            love.graphics.printf('Current Difficulty: Hard', 0, 40, VIRTUAL_WIDTH, 'center')
+            love.graphics.printf('Current Difficulty: Hard', 0, 30, VIRTUAL_WIDTH, 'center')
         end
+        love.graphics.printf('Press Enter to begin!', 0, 40, VIRTUAL_WIDTH, 'center')
     elseif gameState == 'serve' then
         -- UI messages
         love.graphics.setFont(smallFont)
@@ -397,4 +388,26 @@ function displayFPS()
     love.graphics.setFont(smallFont)
     love.graphics.setColor(0, 1, 0, 1)
     love.graphics.print('FPS: ' .. tostring(love.timer.getFPS()), 10, 10)
+end
+
+--[[
+    Resets the game
+]]
+function resetGame()
+    -- reset game state
+    gameState = 'start'
+
+    -- reset ball position
+    ball:reset()
+
+    -- reset scores to 0
+    player1Score = 0
+    player2Score = 0
+
+    -- decide serving player as the opposite of who won
+    if winningPlayer == 1 then
+        servingPlayer = 2
+    else
+        servingPlayer = 1
+    end
 end
