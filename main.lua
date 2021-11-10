@@ -50,6 +50,11 @@ VIRTUAL_HEIGHT = 243
 -- paddle movement speed
 PADDLE_SPEED = 200
 
+-- AI Difficulty Adjustments
+AI_EASY = 3
+AI_NORMAL = 1
+AI_HARD = 0
+
 --[[
     Called just once at the beginning of the game; used to set up
     game objects, variables, etc. and prepare the game world.
@@ -107,6 +112,9 @@ function love.load()
     -- player who won the game; not set to a proper value until we reach
     -- that state in the game
     winningPlayer = 0
+
+    -- set initial AI difficulty to normal
+    aiDifficulty = AI_NORMAL
 
     -- the state of our game; can be any of the following:
     -- 1. 'start' (the beginning of the game, before first serve)
@@ -232,11 +240,12 @@ function love.update(dt)
     --
     -- paddles can move no matter what state we're in
     --
-    -- player 1
-    -- TODO Implement AI for player 1
-    if ball.y + ball.height < player1.y and ball.x < VIRTUAL_WIDTH / 2 then
+    -- player 1 - AI
+    -- Check for y position of ball with some leeway while ball is on same side of court
+    -- Harder AI is more precise
+    if ball.y + ball.height + aiDifficulty < player1.y and ball.x < VIRTUAL_WIDTH / 2 then
         player1.dy = -PADDLE_SPEED
-    elseif ball.y > player1.y + player1.height and ball.x < VIRTUAL_WIDTH / 2 then
+    elseif ball.y > player1.y + player1.height + aiDifficulty and ball.x < VIRTUAL_WIDTH / 2 then
         player1.dy = PADDLE_SPEED
     else
         player1.dy = 0
@@ -272,6 +281,19 @@ function love.keypressed(key)
     if key == 'escape' then
         -- the function LÖVE2D uses to quit the application
         love.event.quit()
+    -- set difficulty during start
+    elseif key == 'e' then
+        if gameState == 'start' then
+            aiDifficulty = AI_EASY
+        end
+    elseif key == 'n' then
+        if gameState == 'start' then
+            aiDifficulty = AI_NORMAL
+        end    
+    elseif key == 'h' then
+        if gameState == 'start' then
+            aiDifficulty = AI_HARD
+        end
     -- if we press enter during either the start or serve phase, it should
     -- transition to the next appropriate state
     elseif key == 'enter' or key == 'return' then
@@ -282,7 +304,7 @@ function love.keypressed(key)
         elseif gameState == 'done' then
             -- game is simply in a restart phase here, but will set the serving
             -- player to the opponent of whomever won for fairness!
-            gameState = 'serve'
+            gameState = 'start'
 
             ball:reset()
 
@@ -316,6 +338,14 @@ function love.draw()
         love.graphics.setFont(smallFont)
         love.graphics.printf('Welcome to Pong!', 0, 10, VIRTUAL_WIDTH, 'center')
         love.graphics.printf('Press Enter to begin!', 0, 20, VIRTUAL_WIDTH, 'center')
+        love.graphics.printf('Select Opponent difficulty: (E)asy, (N)ormal, (H)ard', 0, 30, VIRTUAL_WIDTH, 'center')
+        if aiDifficulty == AI_EASY then
+            love.graphics.printf('Current Difficulty: Easy', 0, 40, VIRTUAL_WIDTH, 'center')
+        elseif aiDifficulty == AI_NORMAL then
+            love.graphics.printf('Current Difficulty: Normal', 0, 40, VIRTUAL_WIDTH, 'center')
+        elseif aiDifficulty == AI_HARD then
+            love.graphics.printf('Current Difficulty: Hard', 0, 40, VIRTUAL_WIDTH, 'center')
+        end
     elseif gameState == 'serve' then
         -- UI messages
         love.graphics.setFont(smallFont)
