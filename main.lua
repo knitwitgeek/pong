@@ -116,6 +116,9 @@ function love.load()
     -- set initial AI difficulty to normal
     aiDifficulty = AI_NORMAL
 
+    -- set demo mode to off
+    demoMode = 0
+
     -- the state of our game; can be any of the following:
     -- 1. 'start' (the beginning of the game, before first serve)
     -- 2. 'serve' (waiting on a key press to serve the ball)
@@ -151,6 +154,10 @@ function love.update(dt)
             ball.dx = math.random(140, 200)
         else
             ball.dx = -math.random(140, 200)
+        end
+        -- activate play state in demo mode
+        if demoMode == 1 then
+            gameState = 'play'
         end
     elseif gameState == 'play' then
         -- detect ball collision with paddles, reversing dx if true and
@@ -256,14 +263,25 @@ function love.update(dt)
     end
 
     -- player 2
-    if love.keyboard.isDown('up') then
-        player2.dy = -PADDLE_SPEED
-    elseif love.keyboard.isDown('down') then
-        player2.dy = PADDLE_SPEED
+    if demoMode == 0 then
+        if love.keyboard.isDown('up') then
+            player2.dy = -PADDLE_SPEED
+        elseif love.keyboard.isDown('down') then
+            player2.dy = PADDLE_SPEED
+        else
+            player2.dy = 0
+        end
     else
-        player2.dy = 0
+        if ball.y + ball.height + aiDifficulty < player2.y + player2.height/2
+            and ball.x > VIRTUAL_WIDTH / 2 then
+            player2.dy = -PADDLE_SPEED
+        elseif ball.y > player2.y + player2.height/2 + aiDifficulty
+            and ball.x > VIRTUAL_WIDTH / 2 then
+            player2.dy = PADDLE_SPEED
+        else
+            player2.dy = 0
+        end
     end
-
     -- update our ball based on its DX and DY only if we're in play state;
     -- scale the velocity by dt so movement is framerate-independent
     if gameState == 'play' then
@@ -298,6 +316,8 @@ function love.keypressed(key)
         if gameState == 'start' then
             aiDifficulty = AI_HARD
         end
+    elseif key == 'd' then
+        demoMode = demoMode == 0 and 1 or 0
     -- if we press enter during either the start or serve phase, it should
     -- transition to the next appropriate state
     elseif key == 'enter' or key == 'return' then
@@ -336,7 +356,8 @@ function love.draw()
         elseif aiDifficulty == AI_HARD then
             love.graphics.printf('Current Difficulty: Hard', 0, 30, VIRTUAL_WIDTH, 'center')
         end
-        love.graphics.printf('Press Enter to begin!', 0, 40, VIRTUAL_WIDTH, 'center')
+        love.graphics.printf('(D)emo Mode:' .. (demoMode == 1 and 'On' or 'Off'), 0, 40, VIRTUAL_WIDTH, 'center')
+        love.graphics.printf('Press Enter to begin!', 0, 50, VIRTUAL_WIDTH, 'center')
     elseif gameState == 'serve' then
         -- UI messages
         love.graphics.setFont(smallFont)
@@ -396,6 +417,12 @@ end
 function resetGame()
     -- reset game state
     gameState = 'start'
+
+    -- turn off demo mode
+    demoMode = 0
+
+    -- reset ai difficulty
+    aiDifficulty = AI_NORMAL
 
     -- reset ball position
     ball:reset()
