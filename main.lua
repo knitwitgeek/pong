@@ -234,16 +234,9 @@ function love.update(dt)
     --
     -- player 1
     -- TODO Implement AI for player 1
-    --[[ if love.keyboard.isDown('w') then
+    if ball.y + ball.height < player1.y and ball.x < VIRTUAL_WIDTH / 2 then
         player1.dy = -PADDLE_SPEED
-    elseif love.keyboard.isDown('s') then
-        player1.dy = PADDLE_SPEED
-    else
-        player1.dy = 0
-    end ]]
-    if ball.y + ball.height < player1.y then
-        player1.dy = -PADDLE_SPEED
-    elseif ball.y > player1.y + player1.height then
+    elseif ball.y > player1.y + player1.height and ball.x < VIRTUAL_WIDTH / 2 then
         player1.dy = PADDLE_SPEED
     else
         player1.dy = 0
